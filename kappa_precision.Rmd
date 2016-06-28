@@ -1,0 +1,62 @@
+Precision calculcations for weighted kappa
+========================================================
+
+When you are trying to justify the sample size for a research project 
+that involves measuring agreement via Cohn's kappa (or weighted kappa)
+You do this not through a power calculation, but through a calculation
+of precision. You want your sample size to be large enough so that the
+resulting confidence interval for kappa is reasonably narrow
+
+Perfect independence is the case where the two raters assign
+values in a perfectly indpendent manner. This means that the
+probability for any combination of scores is equal to the 
+product of the marginal probabilities.
+
+When you 
+
+```{r perfect_independence}
+library("psych")
+
+margin1 <- c(40, 30, 20, 10)
+if (sum(margin1)!=1 & sum(margin1)!=100) {
+  print("Warning: data does not sum to 1.0 or 100%")
+}
+margin2 <- c(40, 20, 20, 20)
+if (sum(margin2)!=1 & sum(margin2)!=100) {
+  print("Warning: data does not sum to 1.0 or 100%")
+}
+margin1 <- margin1 / sum(margin1)
+margin2 <- margin2 / sum(margin2)
+
+perfect_independence <- margin1 %o% margin2
+print(perfect_independence)
+cohen.kappa(200*perfect_independence, alpha=.05)
+```
+
+```{r perfect_agreement}
+margin_min <- pmin(margin1,margin2)
+leftover1 <- margin1 - margin_min
+leftover2 <- margin2 - margin_min
+excess <- sum(leftover1)
+leftover1 <- leftover1 / sum(leftover1)
+leftover2 <- leftover2 / sum(leftover2)
+n <- length(margin1)
+perfect_agreement<- matrix(0, nrow=n, ncol=n)
+for (i in 1:n) {
+  perfect_agreement[i, i] <- margin_min[i]
+}
+perfect_agreement <- perfect_agreement + (leftover1 %o% leftover2)*excess
+print(perfect_agreement)
+print(sum(perfect_agreement))
+cohen.kappa(200*perfect_agreement, alpha=.05)
+```
+
+```{r mixed_agreement}
+for (wt in seq(0.05, 0.95, by=0.05)) {
+  mixed_agreement <- (1-wt)*perfect_independence + wt*perfect_agreement
+  print(wt)
+  print(mixed_agreement)
+  print(cohen.kappa(200*mixed_agreement))
+}
+```
+
