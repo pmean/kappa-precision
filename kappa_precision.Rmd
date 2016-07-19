@@ -5,7 +5,35 @@ When you are trying to justify the sample size for a research project
 that involves measuring agreement via Cohn's kappa (or weighted kappa)
 You do this not through a power calculation, but through a calculation
 of precision. You want your sample size to be large enough so that the
-resulting confidence interval for kappa is reasonably narrow
+resulting confidence interval for kappa is reasonably narrow.
+
+But the variability of the kappa statistic depends the underlying data
+which for an ordinal variable with 4 levels means 16 separate
+probabilities. If you're like me, you have a hard time envisioning
+what a single probability might be, so how are you going to specify
+16 probabilities?
+
+Well, you have to work at it, but it's not as bad as it seems.
+
+The first thing you need to think about is your marginal distributions.
+Does your first rater tend to choose more or less equally among the
+four ordinal levels? If so, marginal probabilities on or around
+25% for each of the four levels seems reasonable. Does your first
+rater tend instead to favor lower levels? If so, probabilities
+on or around 40%, 30%, 20%, and 10% for the four categories are worth
+a try. Reverse these probabilities if the first rater tends to favor
+high levels. If your rater prefers the extremes over the middle, perhaps
+probabilities of 35%, 15%, 15%, and 35% might work.
+
+Now imagine that the second rater has similar tendencies. but perhaps
+not as extreme or perhaps more extreme. So if the second rater has 
+slightly less tendency to select lower values, set his/her
+marginal probabilities to something closer to 30%, 30%, 20%, and 20%.
+
+You could let the two raters disagree sharply on the marginal 
+probabilities, but wildly disparate marginal probabilities makes it
+impossible for you to achieve a high level of agreement. 
+because 
 
 Perfect independence is the case where the two raters assign
 values in a perfectly indpendent manner. This means that the
@@ -17,14 +45,15 @@ When you
 ```{r perfect_independence}
 library("psych")
 
-margin1 <- c(40, 30, 20, 10)
+margin1 <- c(10, 20, 30, 40)
 if (sum(margin1)!=1 & sum(margin1)!=100) {
   print("Warning: data does not sum to 1.0 or 100%")
 }
-margin2 <- c(40, 20, 20, 20)
+margin2 <- c(20, 20, 20, 40)
 if (sum(margin2)!=1 & sum(margin2)!=100) {
   print("Warning: data does not sum to 1.0 or 100%")
 }
+
 margin1 <- margin1 / sum(margin1)
 margin2 <- margin2 / sum(margin2)
 
@@ -38,8 +67,8 @@ margin_min <- pmin(margin1,margin2)
 leftover1 <- margin1 - margin_min
 leftover2 <- margin2 - margin_min
 excess <- sum(leftover1)
-leftover1 <- leftover1 / sum(leftover1)
-leftover2 <- leftover2 / sum(leftover2)
+if (excess>0) leftover1 <- leftover1 / sum(leftover1)
+if (excess>0) leftover2 <- leftover2 / sum(leftover2)
 n <- length(margin1)
 perfect_agreement<- matrix(0, nrow=n, ncol=n)
 for (i in 1:n) {
